@@ -6,6 +6,7 @@ import 'package:trading_app/presentation/auth/screens/bank_link_screen.dart';
 import 'package:trading_app/presentation/auth/screens/kyc_pending_screen.dart';
 import 'package:trading_app/presentation/home/screens/home_shell.dart';
 import 'package:trading_app/presentation/auth/screens/manage_accounts_screen.dart';
+// Cet import doit bien pointer vers le fichier où se trouve le Widget de détail
 import 'package:trading_app/presentation/market/screens/market_detail_screen.dart';
 
 final appRouter = GoRouter(
@@ -43,10 +44,11 @@ final appRouter = GoRouter(
       path: '/market-detail',
       builder: (context, state) {
         final extra = state.extra as Map<String, dynamic>?;
-        return MarketDetailScreen(
+        // CORRECTION : Le nom de la classe est SecurityDetailScreen
+        return SecurityDetailScreen(
           title: extra?['title'] as String? ?? 'Détail',
-          isin: extra?['isin'] as String? ?? 'N/A',
-          currentPrice: extra?['price'] as String? ?? '0.00',
+          symbol: extra?['symbol'] as String? ??
+              'N/A', // On utilise symbol comme défini avant
         );
       },
     ),

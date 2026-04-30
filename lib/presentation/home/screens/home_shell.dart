@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
-// Import de ton écran HomeScreen (Portefeuille)
 import 'package:trading_app/presentation/home/screens/home_screen.dart';
-// Import de l'écran des Ordres
 import 'package:trading_app/presentation/orders/screens/orders_screen.dart';
-
-// Note : L'importation de ProfileScreen a été supprimée car le fichier n'existe pas encore
 
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
@@ -16,11 +12,10 @@ class HomeShell extends StatefulWidget {
 class _HomeShellState extends State<HomeShell> {
   int _currentIndex = 0;
 
-  // Liste des écrans corrigée
+  // Liste des écrans réorganisée selon ton souhait
   final List<Widget> _screens = [
-    const HomeScreen(), // Index 0 : Portefeuille
-    const OrdersScreen(), // Index 1 : Ordres
-    // On remplace ProfileScreen par un widget temporaire pour éviter l'erreur
+    const HomeScreen(), // Index 0 : Marché (Primaire/Secondaire avec titres)
+    const OrdersScreen(), // Index 1 : Portefeuille (ou Ordres selon tes fichiers)
     const Center(
         child: Text("Page Profil bientôt disponible")), // Index 2 : Profil
   ];
@@ -49,15 +44,16 @@ class _HomeShellState extends State<HomeShell> {
         selectedFontSize: 12,
         unselectedFontSize: 12,
         items: const [
+          // Nouvel ordre des icônes
+          BottomNavigationBarItem(
+            icon: Icon(Icons.show_chart_outlined),
+            activeIcon: Icon(Icons.show_chart),
+            label: 'Marché',
+          ),
           BottomNavigationBarItem(
             icon: Icon(Icons.account_balance_wallet_outlined),
             activeIcon: Icon(Icons.account_balance_wallet),
             label: 'Portefeuille',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.assignment_outlined),
-            activeIcon: Icon(Icons.assignment),
-            label: 'Ordres',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+// Assure-toi que le chemin d'importation vers ton fichier de détail est correct
+import 'package:trading_app/presentation/market/screens/market_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -8,236 +10,262 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // États de l'utilisateur (Simulation)
   bool isKycValidated = false;
   bool isBankAccountAdded = false;
+  int selectedIndex = 0;
+
+  // --- LOGIQUE DE VÉRIFICATION AU CLIC ---
+  // On attend bien le titre ET le symbole
+  void _handleTileTap(String title, String symbol) {
+    if (isKycValidated && isBankAccountAdded) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+              SecurityDetailScreen(title: title, symbol: symbol),
+          fullscreenDialog: true,
+        ),
+      );
+    } else {
+      _showOnboardingModal();
+    }
+  }
+
+  void _showOnboardingModal() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => _buildMissingStepsOverlay(),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final primaryColor = theme.colorScheme.primary;
-
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text(
-          'Comptes',
-          style: TextStyle(
-              fontWeight: FontWeight.bold, fontSize: 28, color: Colors.black87),
-        ),
-        centerTitle: false,
-        backgroundColor: Colors.transparent,
+        title: const Text('Marché',
+            style: TextStyle(
+                fontWeight: FontWeight.w900,
+                fontSize: 24,
+                color: Colors.black)),
         elevation: 0,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: IconButton(
-              onPressed: isKycValidated
-                  ? () => _showAddAccountSheet(context)
-                  : () => _showRestrictionSnackBar(
-                      context, "Complétez votre KYC pour ajouter un compte."),
-              icon: Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: isKycValidated ? primaryColor : Colors.grey.shade300,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.add, color: Colors.white, size: 20),
-              ),
+        backgroundColor: Colors.white,
+      ),
+      body: Column(
+        children: [
+          // Sélecteur Segmenté
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            height: 45,
+            decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(10)),
+            child: Row(
+              children: [
+                _buildSegmentItem("Secondaire", 0),
+                _buildSegmentItem("Primaire", 1),
+              ],
+            ),
+          ),
+
+          // Liste des titres
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              itemCount: selectedIndex == 0 ? 10 : 3,
+              itemBuilder: (context, index) {
+                // Définition du titre et du symbole selon l'onglet
+                String title =
+                    selectedIndex == 0 ? "Sonatrach SNT" : "Trésor Public";
+                String symbol = selectedIndex == 0 ? "SNT" : "DZ-BOND";
+
+                return InkWell(
+                  // CORRECTION : On passe maintenant les deux arguments requis
+                  onTap: () => _handleTileTap(title, symbol),
+                  child: _buildModernTile(index, title),
+                );
+              },
             ),
           ),
         ],
       ),
-      body: CustomScrollView(
-        slivers: [
-          // 1. BANNIÈRE KYC
-          if (!isKycValidated)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: _buildKycBanner(primaryColor),
-              ),
-            ),
+    );
+  }
 
-          // 2. BOUTONS DE MARCHÉ
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              child: Row(
+  // --- MODAL DES ÉTAPES MANQUANTES ---
+  Widget _buildMissingStepsOverlay() {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+      ),
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+          ),
+          const SizedBox(height: 24),
+          const Text("Finalisez votre profil",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          const Text(
+              "Pour commencer à investir sur le marché, les étapes suivantes sont nécessaires :",
+              style: TextStyle(color: Colors.grey)),
+          const SizedBox(height: 24),
+          if (!isKycValidated)
+            _buildStepAction(
+              title: "Vérification d'identité (KYC)",
+              subtitle: "Requis pour la sécurité de vos fonds",
+              icon: Icons.person_search_outlined,
+              onTap: () {
+                Navigator.pop(context);
+                // Action pour passer à true pour tester :
+                setState(() => isKycValidated = true);
+              },
+            ),
+          if (!isKycValidated && !isBankAccountAdded)
+            const SizedBox(height: 12),
+          if (!isBankAccountAdded)
+            _buildStepAction(
+              title: "Ajouter un compte bancaire",
+              subtitle: "Lier votre compte pour les virements",
+              icon: Icons.account_balance_outlined,
+              onTap: () {
+                Navigator.pop(context);
+                // Action pour passer à true pour tester :
+                setState(() => isBankAccountAdded = true);
+              },
+            ),
+          const SizedBox(height: 32),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStepAction(
+      {required String title,
+      required String subtitle,
+      required IconData icon,
+      required VoidCallback onTap}) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: Colors.blue.shade100),
+          color: Colors.blue.withValues(alpha: 0.05),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: Colors.blue.shade800, size: 28),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildMarketTab(
-                      "Marché Primaire", Icons.business_rounded, Colors.blue),
-                  const SizedBox(width: 12),
-                  _buildMarketTab("Marché Secondaire", Icons.analytics_rounded,
-                      Colors.green),
+                  Text(title,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 16)),
+                  Text(subtitle,
+                      style: TextStyle(
+                          color: Colors.blue.shade900.withValues(alpha: 0.6),
+                          fontSize: 12)),
                 ],
               ),
             ),
-          ),
-
-          const SliverToBoxAdapter(child: SizedBox(height: 24)),
-
-          // 3. LISTE DES TITRES
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0),
-            sliver: SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) => _buildSecurityTile(index),
-                childCount: 10,
-              ),
-            ),
-          ),
-        ],
-      ),
-      // Note: Le bottomNavigationBar est normalement géré par HomeShell,
-      // mais je le laisse ici si tu veux tester cette page seule.
-    );
-  }
-
-  Widget _buildKycBanner(Color color) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFF9E7),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.orange.shade100),
-      ),
-      child: Column(
-        children: [
-          const Text(
-            "Complétez votre identité pour débloquer toutes les fonctionnalités.",
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-          ),
-          const SizedBox(height: 12),
-          ElevatedButton(
-            onPressed: () {
-              setState(() => isKycValidated = true);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFFFD700),
-              foregroundColor: Colors.black,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-            ),
-            child: const Text("Vérifier maintenant"),
-          ),
-        ],
+            const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.blue),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildMarketTab(String title, IconData icon, Color color) {
+  Widget _buildSegmentItem(String label, int index) {
+    bool isSelected = selectedIndex == index;
     return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(15),
-          border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: color),
-            const SizedBox(height: 8),
-            Text(title,
-                style:
-                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSecurityTile(int index) {
-    return InkWell(
-      onTap: isBankAccountAdded
-          ? () => debugPrint("Accès au titre $index")
-          : () => _showRestrictionSnackBar(
-              context, "Ajoutez un compte bancaire pour trader ce titre."),
-      child: Opacity(
-        // Correction ici : On utilise le widget Opacity pour griser le contenu
-        opacity: isBankAccountAdded ? 1.0 : 0.6,
+      child: GestureDetector(
+        onTap: () => setState(() => selectedIndex = index),
         child: Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(16),
+          margin: const EdgeInsets.all(4),
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(15),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 10,
-              )
-            ],
+            color: isSelected ? Colors.white : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2))
+                  ]
+                : [],
           ),
-          child: Row(
+          alignment: Alignment.center,
+          child: Text(label,
+              style: TextStyle(
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  color: isSelected ? Colors.blue.shade800 : Colors.grey)),
+        ),
+      ),
+    );
+  }
+
+  // J'ai ajouté l'argument title ici pour que l'affichage soit cohérent
+  Widget _buildModernTile(int index, String title) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 15),
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      decoration: BoxDecoration(
+          border: Border(bottom: BorderSide(color: Colors.grey.shade100))),
+      child: Row(
+        children: [
+          Container(
+            height: 48,
+            width: 48,
+            decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(12)),
+            child: Center(
+                child: Text(selectedIndex == 0 ? "⚡" : "🏢",
+                    style: const TextStyle(fontSize: 20))),
+          ),
+          const SizedBox(width: 15),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 16)),
+                Text(
+                    selectedIndex == 0 ? "+2.4% aujourd'hui" : "Offre en cours",
+                    style: TextStyle(
+                        color:
+                            selectedIndex == 0 ? Colors.green : Colors.orange,
+                        fontSize: 12)),
+              ],
+            ),
+          ),
+          const Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              CircleAvatar(
-                  backgroundColor: Colors.grey.shade100,
-                  child: const Text("💰")),
-              const SizedBox(width: 16),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("Action SONATRACH",
-                        style: TextStyle(fontWeight: FontWeight.bold)),
-                    Text("SNT - Marché Primaire",
-                        style: TextStyle(fontSize: 12, color: Colors.grey)),
-                  ],
-                ),
-              ),
-              const Text("4,500 DZD",
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold, color: Colors.blue)),
+              Text("4,500 DZD", style: TextStyle(fontWeight: FontWeight.w900)),
+              Text("Vol: 1.2M",
+                  style: TextStyle(color: Colors.grey, fontSize: 11)),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  void _showRestrictionSnackBar(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.redAccent,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
-
-  void _showAddAccountSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (context) => Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text("Ajouter un compte bancaire",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 20),
-            const Text(
-              "Veuillez lier votre compte BADR Bank pour commencer vos transactions.",
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.black54),
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                  onPressed: () {
-                    setState(() => isBankAccountAdded = true);
-                    Navigator.pop(context);
-                  },
-                  child: const Text("Confirmer l'ajout")),
-            ),
-          ],
-        ),
+        ],
       ),
     );
   }
