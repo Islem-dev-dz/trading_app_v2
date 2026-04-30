@@ -17,17 +17,17 @@ class _AuthSelectionScreenState extends State<AuthSelectionScreen> {
   // Liste de vos contenus (Images + Textes)
   final List<Map<String, String>> _slides = [
     {
-      "image": "assets/slide1.png", // Remplacez par vos chemins d'images
+      "image": "assets/images/slide1.png", // Remplacez par vos chemins d'images
       "title": "Les meilleurs spreads sur l’or",
       "desc": "Négociez des actifs clés avec les spreads les plus serrés."
     },
     {
-      "image": "assets/slide2.png",
+      "image": "assets/images/slide2.png",
       "title": "Le pétrole et le Bitcoin",
       "desc": "Accédez aux marchés mondiaux en un clic."
     },
     {
-      "image": "assets/slide3.png",
+      "image": "assets/images/slide3.png",
       "title": "Sécurité BADR Invest",
       "desc": "Vos fonds sont protégés par une technologie de pointe."
     },
