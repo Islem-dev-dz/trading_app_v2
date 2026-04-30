@@ -8,6 +8,7 @@ import 'package:trading_app/presentation/home/screens/home_shell.dart';
 import 'package:trading_app/presentation/auth/screens/manage_accounts_screen.dart';
 // Cet import doit bien pointer vers le fichier où se trouve le Widget de détail
 import 'package:trading_app/presentation/market/screens/market_detail_screen.dart';
+import 'package:trading_app/presentation/profile/profile_screen.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/',
@@ -31,6 +32,11 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/kyc-pending',
       builder: (context, state) => const KycPendingScreen(),
+    ),
+    // Dans ton fichier router
+    GoRoute(
+      path: '/profile',
+      builder: (context, state) => const ProfileScreen(),
     ),
     GoRoute(
       path: '/market',

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:trading_app/presentation/home/screens/home_screen.dart';
 import 'package:trading_app/presentation/orders/screens/orders_screen.dart';
+import 'package:trading_app/presentation/profile/profile_screen.dart';
 
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
@@ -12,12 +13,11 @@ class HomeShell extends StatefulWidget {
 class _HomeShellState extends State<HomeShell> {
   int _currentIndex = 0;
 
-  // Liste des écrans réorganisée selon ton souhait
+  // Liste des écrans mise à jour avec ta nouvelle page
   final List<Widget> _screens = [
-    const HomeScreen(), // Index 0 : Marché (Primaire/Secondaire avec titres)
-    const OrdersScreen(), // Index 1 : Portefeuille (ou Ordres selon tes fichiers)
-    const Center(
-        child: Text("Page Profil bientôt disponible")), // Index 2 : Profil
+    const HomeScreen(), // Index 0 : Marché
+    const OrdersScreen(), // Index 1 : Portefeuille
+    const ProfileScreen(), // Index 2 : Ton nouveau profil corrigé
   ];
 
   @override
