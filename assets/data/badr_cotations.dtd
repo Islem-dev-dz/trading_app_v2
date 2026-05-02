@@ -1,0 +1,11 @@
+<!ELEMENT bourse_alger (titre+)>
+<!ATTLIST bourse_alger date_seance CDATA #REQUIRED>
+
+<!ELEMENT titre (libelle, code, prix_actuel, variation, categorie)>
+<!ATTLIST titre type (primaire | secondaire) #REQUIRED>
+
+<!ELEMENT libelle (#PCDATA)>
+<!ELEMENT code (#PCDATA)>
+<!ELEMENT prix_actuel (#PCDATA)>
+<!ELEMENT variation (#PCDATA)>
+<!ELEMENT categorie (#PCDATA)>

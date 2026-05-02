@@ -1,28 +1,60 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:trading_app/models/titre_model.dart';
+import 'xml_api_service.dart';
+import 'package:xml/xml.dart';
 
 class MarketDataSyncService {
   Timer? _timer;
+  final XmlApiService _apiService = XmlApiService();
   
-  // Trading days in Algiers Stock Exchange (Sun: 7, Tue: 2, Thu: 4)
+  // Jours de cotation à la Bourse d'Alger
   final List<int> _tradingDays = [DateTime.sunday, DateTime.tuesday, DateTime.thursday];
 
+  // --- LOGIQUE DE RÉCUPÉRATION DES DONNÉES (Pour l'UI) ---
+
+  /// Récupère les titres depuis le XML et les filtre par type
+  Future<List<TitreBoursier>> getMarketData(String type) async {
+    try {
+      // Appelle le service XML que nous avons configuré
+      final String xmlString = await _apiService.sendRequest('/market/data');
+      
+      final document = XmlDocument.parse(xmlString);
+      final titresXml = document.findAllElements('titre');
+
+      return titresXml
+          .where((node) => node.getAttribute('type') == type)
+          .map((node) {
+        return TitreBoursier(
+          libelle: node.findElements('libelle').first.innerText,
+          code: node.findElements('code').first.innerText,
+          prix: double.parse(node.findElements('prix_actuel').first.innerText),
+          variation: node.findElements('variation').first.innerText,
+          categorie: node.findElements('categorie').first.innerText,
+          type: node.getAttribute('type') ?? 'secondaire',
+        );
+      }).toList();
+    } catch (e) {
+      debugPrint("Erreur SyncService: $e");
+      return [];
+    }
+  }
+
+  // --- LOGIQUE DE SYNCHRONISATION TEMPORELLE (Ton code existant) ---
+
   void startPeriodicSync(BuildContext context) {
-    // Check every minute if we need to sync (for demo, you'd check less frequently in prod or use background fetch)
     _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
       _checkAndSync(context);
     });
-    
-    // Check immediately on start
     _checkAndSync(context);
   }
 
   void _checkAndSync(BuildContext context) {
     final now = DateTime.now();
     
-    // Check if today is a trading day
+    // Vérifie si c'est un jour de bourse en Algérie
     if (_tradingDays.contains(now.weekday)) {
-      // Check if time is past 11:00 AM (end of session in Algiers)
+      // Fin de séance à 11:00
       if (now.hour >= 11) {
         _simulateScrapingAndSync(context);
       }
@@ -30,22 +62,8 @@ class MarketDataSyncService {
   }
 
   void _simulateScrapingAndSync(BuildContext context) {
-    // In a real app, we would make an HTTP request to scrape data or call an API,
-    // parse the XML/JSON, and update the local database/cache.
-    
-    debugPrint('Simulation: Scraping Bourse d\'Alger data... Time is past 11:00 on a trading day.');
-    
-    // For demonstration, we just show a notification that data was synced
-    // if the user is in the app. In background, it would just save to local DB.
-    
-    /* Uncomment to show SnackBar
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Synchronisation des données de marché terminée (Post-séance).'),
-        duration: Duration(seconds: 2),
-      ),
-    );
-    */
+    debugPrint('SNTF/BADR Sync: Mise à jour des titres après 11:00...');
+    // Ici, on pourrait forcer un rafraîchissement global du cache si nécessaire
   }
 
   void stopSync() {
